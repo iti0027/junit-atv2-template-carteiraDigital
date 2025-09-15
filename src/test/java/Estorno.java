@@ -24,17 +24,40 @@ class Estorno {
         );
     }
 
-    
+    @ParameterizedTest
+    @MethodSource("valoresEstorno")
     void refundComCarteiraValida(double inicial, double valor, double saldoEsperado) {
-        
+        DigitalWallet wallet = new DigitalWallet("Ítalo", inicial);
+        wallet.verify();
+
+        assumeTrue(wallet.isVerified());
+        assumeFalse(wallet.isLocked());
+
+        wallet.refund(valor);
+
+        assertEquals(saldoEsperado, wallet.getBalance());
     }
 
-    
+    @ParameterizedTest
+    @ValueSource(doubles = {-1, 0, -10.50})
     void deveLancarExcecaoParaRefundInvalido(double valor) {
-        
+        DigitalWallet wallet = new DigitalWallet("Ítalo", 700);
+        wallet.verify();
+
+        assumeTrue(wallet.isVerified());
+        assumeFalse(wallet.isLocked());
+
+        assertThrows(IllegalArgumentException.class, () -> wallet.refund(valor));
     }
 
+    @Test
     void deveLancarSeNaoVerificadaOuBloqueada() {
-        
+        DigitalWallet wallet = new DigitalWallet("Ítalo", 250);
+
+        assumeFalse(wallet.isVerified());
+        assumeFalse(wallet.isLocked());
+
+        assertThrows(IllegalStateException.class, () -> wallet.refund(100));
     }
+    
 }
